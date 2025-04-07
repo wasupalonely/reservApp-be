@@ -32,95 +32,96 @@ enum BookingStatus {
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  email       String    @unique
-  username    String    @unique
-  password    String
-  fullName    String?
-  phone       String?
-  avatar      String?
-  role        Role      @default(USER)
-  bookings    Booking[]
-  reviews     Review[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  username  String    @unique
+  password  String
+  fullName  String?
+  phone     String?
+  avatar    String?
+  role      Role      @default(USER)
+  bookings  Booking[]
+  reviews   Review[]
+  isActive  Boolean   @default(true) // Cambiar esto más adelante para la verificación de correo
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Un SUPERADMIN puede crear múltiples establecimientos
-  createdVenues Venue[]  @relation("CreatedVenues")
+  createdVenues Venue[] @relation("CreatedVenues")
 
   // Un VENUE_ADMIN puede administrar un establecimiento (1:1)
-  managedVenue  Venue?   @relation("ManagedVenues")
+  managedVenue Venue? @relation("ManagedVenues")
 }
 
 model Venue {
-  id          Int       @id @default(autoincrement())
-  name        String
-  description String?
-  address     String
-  latitude    Float
-  longitude   Float
-  openingHours Json?    // { "monday": "8:00-22:00", ... }
+  id           Int     @id @default(autoincrement())
+  name         String
+  description  String?
+  address      String
+  latitude     Float
+  longitude    Float
+  openingHours Json? // { "monday": "8:00-22:00", ... }
   contactPhone String
   contactEmail String
-  isActive    Boolean   @default(true)
+  isActive     Boolean @default(true)
   // Relación con el SUPERADMIN que CREÓ el establecimiento
-  createdBy   User      @relation("CreatedVenues", fields: [createdById], references: [id])
-  createdById Int
+  createdBy    User    @relation("CreatedVenues", fields: [createdById], references: [id])
+  createdById  Int
 
   // Relación con el VENUE_ADMIN que ADMINISTRA el establecimiento
-  admin       User?     @relation("ManagedVenues", fields: [adminId], references: [id])
-  adminId     Int?      @unique
+  admin       User?    @relation("ManagedVenues", fields: [adminId], references: [id])
+  adminId     Int?     @unique
   reviews     Review[]
   pitches     Pitch[]
   website     String?
   socialMedia Json?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Pitch {
-  id          Int       @id @default(autoincrement())
-  name        String
-  type        PitchType
-  venue       Venue     @relation(fields: [venueId], references: [id])
-  venueId     Int
-  photos      String[]  // URLs de imágenes
-  size        String?   // "20x40 meters"
+  id                 Int       @id @default(autoincrement())
+  name               String
+  type               PitchType
+  venue              Venue     @relation(fields: [venueId], references: [id])
+  venueId            Int
+  photos             String[] // URLs de imágenes
+  size               String? // "20x40 meters"
   recommendedPlayers Int?
-  pricePerHour Float
-  amenities   String[] 
-  isActive    Boolean   @default(true)
-  bookings    Booking[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  pricePerHour       Float
+  amenities          String[]
+  isActive           Boolean   @default(true)
+  bookings           Booking[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model Booking {
-  id          Int           @id @default(autoincrement())
-  user        User          @relation(fields: [userId], references: [id])
-  userId      Int
-  pitch       Pitch         @relation(fields: [pitchId], references: [id])
-  pitchId     Int
-  date        DateTime      // Fecha de la reserva
-  startTime   String        // "18:00"
-  endTime     String        // "20:00"
-  status      BookingStatus @default(BOOKED)
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        Int           @id @default(autoincrement())
+  user      User          @relation(fields: [userId], references: [id])
+  userId    Int
+  pitch     Pitch         @relation(fields: [pitchId], references: [id])
+  pitchId   Int
+  date      DateTime // Fecha de la reserva
+  startTime String // "18:00"
+  endTime   String // "20:00"
+  status    BookingStatus @default(BOOKED)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   @@index([pitchId])
   @@index([date])
 }
 
 model Review {
-  id          Int       @id @default(autoincrement())
-  rating      Int       
-  comment     String    @db.VarChar(500)
-  user        User      @relation(fields: [userId], references: [id])
-  userId      Int
-  venue       Venue     @relation(fields: [venueId], references: [id])
-  venueId     Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String   @db.VarChar(500)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  venue     Venue    @relation(fields: [venueId], references: [id])
+  venueId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
