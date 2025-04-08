@@ -43,6 +43,7 @@ export const createVenueSchema = Joi.object({
   contactEmail: Joi.string().email().required(),
   latitude: Joi.number().min(-90).max(90).required(),
   longitude: Joi.number().min(-180).max(180).required(),
+  address: Joi.string().min(3).max(255),
   contactPhone: Joi.string()
     .min(10)
     .max(10)
@@ -51,4 +52,13 @@ export const createVenueSchema = Joi.object({
   adminId: Joi.number().integer().min(1).required(),
   website: Joi.string().uri().optional(),
   // Maybe add social media links
+});
+
+export const venueRegistrationSchema = Joi.object({
+  venueData: createVenueSchema.required(),
+  legalDocuments: Joi.array()
+    .items(
+      Joi.string().pattern(/^data:application\/pdf;base64,.+/) // Ejemplo para PDFs
+    )
+    .min(1),
 });

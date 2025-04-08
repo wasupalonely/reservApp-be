@@ -1,7 +1,10 @@
 import boom from "@hapi/boom";
 import prisma from "../config/db.js";
+import { ApprovalService } from "./approval.service.js";
 
 export class VenueService {
+  approvalService = new ApprovalService();
+
   async getAllVenues({ page, limit, search, sortBy, order, filters = {} }) {
     const where = {
       ...filters,
@@ -63,32 +66,46 @@ export class VenueService {
   }
 
   async createVenue(data, userId) {
-    try {
-      const address = await this.getAddressFromCoordinates(
-        data.latitude,
-        data.longitude
-      );
+    if (await this.approvalService.needsApproval()) {
+      throw boom.forbidden("Approval pending");
+    } else {
+      try {
+        if (!data.address) {
+          const address = await this.getAddressFromCoordinates(
+            data.latitude,
+            data.longitude
+          );
 
-      return prisma.venue.create({
-        data: {
-          ...data,
-          address,
-          createdById: userId,
-        },
-        select: {
-          id: true,
-          name: true,
-          address: true,
-          latitude: true,
-          longitude: true,
-          contactPhone: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
-    } catch (error) {
-      throw boom.badImplementation("Error creating venue");
+          data.address = address;
+        }
+
+        return prisma.$transaction([
+          prisma.venue.create({
+            data: {
+              ...data,
+              createdById: userId,
+            },
+            select: {
+              id: true,
+              name: true,
+              address: true,
+              latitude: true,
+              longitude: true,
+              contactPhone: true,
+              isActive: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          }),
+          prisma.user.update({
+            where: { id: data.adminId },
+            data: { role: "VENUE_ADMIN" },
+          }),
+        ]);
+      } catch (error) {
+        console.log("🚀 ~ VenueService ~ createVenue ~ error:", error);
+        throw boom.badImplementation("Error creating venue");
+      }
     }
   }
 
@@ -98,7 +115,11 @@ export class VenueService {
         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
       );
 
-      const data = response.json();
+      const data = await response.json();
+      console.log(
+        "🚀 ~ VenueService ~ getAddressFromCoordinates ~ data:",
+        data
+      );
       return data.display_name;
     } catch (error) {
       throw boom.badGateway("Error getting address from coordinates");

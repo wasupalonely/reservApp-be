@@ -53,8 +53,16 @@ model User {
   managedVenue Venue? @relation("ManagedVenues")
 }
 
+enum VenueStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
 model Venue {
-  id           Int     @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   name         String
   description  String?
   address      String
@@ -63,20 +71,20 @@ model Venue {
   openingHours Json? // { "monday": "8:00-22:00", ... }
   contactPhone String
   contactEmail String
-  isActive     Boolean @default(true)
+  isActive     Boolean     @default(true)
   // Relación con el SUPERADMIN que CREÓ el establecimiento
-  createdBy    User    @relation("CreatedVenues", fields: [createdById], references: [id])
+  createdBy    User        @relation("CreatedVenues", fields: [createdById], references: [id])
   createdById  Int
-
+  status       VenueStatus @default(PENDING_APPROVAL)
   // Relación con el VENUE_ADMIN que ADMINISTRA el establecimiento
-  admin       User?    @relation("ManagedVenues", fields: [adminId], references: [id])
-  adminId     Int?     @unique
-  reviews     Review[]
-  pitches     Pitch[]
-  website     String?
-  socialMedia Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  admin        User?       @relation("ManagedVenues", fields: [adminId], references: [id])
+  adminId      Int?        @unique
+  reviews      Review[]
+  pitches      Pitch[]
+  website      String?
+  socialMedia  Json?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Pitch {
